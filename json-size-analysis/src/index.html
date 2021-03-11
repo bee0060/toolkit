@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .content {
+      border-top: 2px solid saddlebrown;
+      flex: 1;
+      margin-top: 20px;
+    }
+
+    #output {
+      border: 1px solid gray;
+      min-height: 50px; 
+      padding: 20px;
+    }
+
+    #output li {
+      height: 20px;
+      list-style: none;
+      margin-bottom: 10px;
+      white-space: pre;
+    }
+
+    #output li::after {
+      display: inline-block;
+      content: "Size: "attr(data-size) " bytes,  Percentage: " attr(data-percentage) " %";
+      margin-left: 20px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <button onclick="importJSON(event)">run</button><br>
+      JSON: <textarea name="txaInput" id="txaInput" cols="30" rows="10"
+      >{"str1":"I am a string!","obj1":{"str2":456}}</textarea>
+    </div>
+    <div class="content">
+      <p id="totalInfo"></p>
+      <p>Output JSON:</p>
+      <ul id="output"></ul>
+    </div>
+  </div>
+  <script src="./core.js"></script>
+  <script>
+    console.log('jsonSizeAnalysis', jsonSizeAnalysis)
+    function importJSON(event) {
+      console.log('import - event', event)
+      const txa = document.querySelector('#txaInput')
+      const str = txa.value;
+      console.log('str', str)
+      const json = JSON.parse(str);
+      const formattedJSONString = JSON.stringify(json, null, 4);
+      const foramttedArray = formattedJSONString.split('\n');
+      const sizeInfo = jsonSizeAnalysis(json);
+      console.log('**', foramttedArray)
+      console.log('**', sizeInfo)
+
+      console.log('=== before build html')
+      const merged = mergeSizeInfoWithJson(sizeInfo, json)
+      console.log('=== after build html')
+
+      const html = buildHTML(merged);
+      
+      const totalInfo = document.querySelector('#totalInfo');
+      const output = document.querySelector('#output');
+      totalInfo.innerHTML = `Size: ${sizeInfo.__size__} bytes`;
+      // output.innerHTML = foramttedArray.map(line => {
+      //   return `<li data-size="" data-percentage="">${line}</li>`
+      // }).join('')
+      output.innerHTML = html.join('')
+    }
+
+    function mergeSizeInfoWithJson(sizeInfo, json, path = '', level = 0) {
+      const result = [];
+
+      for(var key in json) {
+        const currentValue = json[key];
+        const currentSize = sizeInfo[key];
+        const isObject = typeof currentValue === 'object';
+        const node = {
+          key,
+          size: currentSize.__size__,
+          percentage: currentSize.__percentage__.toFixed(2),
+          path,
+          level,
+          value: currentValue,
+          isObject
+        }
+        result.push(node);
+        if (isObject) {
+          result.push(...mergeSizeInfoWithJson(currentSize, currentValue, `${path}.${key}`, level + 1))
+        }
+      }
+      return result;
+    }
+
+    function buildHTML(jsonWithSizeInfo) {
+      if(!Array.isArray(jsonWithSizeInfo)) {
+        return ''
+      }
+
+      return jsonWithSizeInfo.map(node => {
+        return `<li
+          class="level-${node.level}" 
+          data-size="${node.size}" 
+          data-percentage="${node.percentage}">${'|- '.repeat(node.level)}${node.key}</li>`
+      })
+    }
+
+
+  </script>
+</body>
+</html>
