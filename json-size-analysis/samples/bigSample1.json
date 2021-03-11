@@ -1,0 +1,75 @@
+{
+  "stringExample": "a default string example",
+  "booleanExample": true,
+  "numberExample": 123.4,
+  "integerExample": 124,
+  "nullExample": null,
+  "objectExample": {
+    "propertyExample1": "",
+    "propertyExample2": 0
+  },
+  "arrayExample": [
+    "default item 1",
+    "default item 2"
+  ],
+  "readOnlyExample": "abc",
+  "enumExample": "enum 1",
+  "colorExample": "#000000",
+  "textareaExample": "",
+  "patternExample": "abc",
+  "imagePreviewExample": "http://image2.sina.com.cn/bj/art/2004-08-02/U91P52T4D51657F160DT20040802125523.jpg",
+  "markdownExample": "###### markdown title and code example\n\n```js\nfunction foo(bar) {\n    console.log(bar);\n}\n```",
+  "codeExample": "function foo(bar) {\n    console.log(bar);\n}\n",
+  "itemTitleExample": [
+    {
+      "propertyExample1": "foo",
+      "propertyExample2": 1
+    },
+    {
+      "propertyExample1": "bar",
+      "propertyExample2": 2
+    },
+    {
+      "propertyExample1": "baz",
+      "propertyExample2": 3
+    },
+    {
+      "propertyExample1": "abc",
+      "propertyExample2": 4
+    },
+    {
+      "propertyExample1": "def",
+      "propertyExample2": 5
+    },
+    {
+      "propertyExample1": "ghi",
+      "propertyExample2": 6
+    }
+  ],
+  "optionalObjectExample": {},
+  "collapsedObjectExample": {},
+  "emptyEnumExample": "",
+  "uploadFileExample": "",
+  "requiredWhenExample": {
+    "kind": "enum 1",
+    "propertyExample1": 0,
+    "propertyExample3": 0,
+    "propertyExample4": ""
+  },
+  "checkboxBooleanExample": true,
+  "enumTitlesExample": "enum 1",
+  "itemTitleEnumTitleExample": [
+    {
+      "propertyExample1": "bar"
+    }
+  ],
+  "selectBooleanExample": false,
+  "select2BooleanExample": false,
+  "stringEnumSelectExample": "enum 1",
+  "stringEnumRadioboxExample": "enum 1",
+  "numberEnumSelectExample": 1,
+  "numberEnumRadioboxExample": 1,
+  "classNameExample": "",
+  "enumArrayExample": [],
+  "enumArraySelect2Example": []
+}
