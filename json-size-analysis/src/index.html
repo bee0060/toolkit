@@ -55,31 +55,19 @@
   </div>
   <script src="./core.js"></script>
   <script>
-    console.log('jsonSizeAnalysis', jsonSizeAnalysis)
     function importJSON(event) {
-      console.log('import - event', event)
       const txa = document.querySelector('#txaInput')
       const str = txa.value;
-      console.log('str', str)
       const json = JSON.parse(str);
       const formattedJSONString = JSON.stringify(json, null, 4);
       const foramttedArray = formattedJSONString.split('\n');
       const sizeInfo = jsonSizeAnalysis(json);
-      console.log('**', foramttedArray)
-      console.log('**', sizeInfo)
-
-      console.log('=== before build html')
       const merged = mergeSizeInfoWithJson(sizeInfo, json)
-      console.log('=== after build html')
-
       const html = buildHTML(merged);
       
       const totalInfo = document.querySelector('#totalInfo');
       const output = document.querySelector('#output');
       totalInfo.innerHTML = `Size: ${sizeInfo.__size__} bytes`;
-      // output.innerHTML = foramttedArray.map(line => {
-      //   return `<li data-size="" data-percentage="">${line}</li>`
-      // }).join('')
       output.innerHTML = html.join('')
     }
 
@@ -114,13 +102,44 @@
 
       return jsonWithSizeInfo.map(node => {
         return `<li
-          class="level-${node.level}" 
+          class="nodes level-${node.level}" 
+          style="display: var(${getVarName(node.path)}, ${getVarDefaultValue(node.path)})"
+          data-key="${node.key}"
+          data-path="${node.path}"
           data-size="${node.size}" 
           data-percentage="${node.percentage}">${'|- '.repeat(node.level)}${node.key}</li>`
       })
     }
 
+    function getVarName(path, key = '') {
+      return `--${path}${key ? `-${key}` : ''}`.replace(/[^a-z0-9-]/gi, '-')
+    }
 
+    function getVarDefaultValue(path) {
+      const parentPath = path.replace(/\.[^.]*$/, '')
+      return parentPath ? `var(${getVarName(parentPath)}, ${getVarDefaultValue(parentPath)})` : 'block'
+    }
+
+    function registerEvent(root) {
+      root.addEventListener('click', (ev) => {
+        if (!ev.target.className.includes('nodes')) {
+          return false
+        }
+        
+        const key = ev.target.dataset.key
+        const path = ev.target.dataset.path
+        const varName = getVarName(path, key)
+        const cssValue = root.style.getPropertyValue(varName)
+        const isHiddingChildren = cssValue === 'none'
+        isHiddingChildren
+          ? root.style.removeProperty(varName) 
+          : root.style.setProperty(varName, 'none')
+      })
+    }
+
+    window.onload = function() {
+      registerEvent(document.body)
+    }
   </script>
 </body>
 </html>
