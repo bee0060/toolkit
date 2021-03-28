@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,24 @@
     .container {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: 100%;
+    }
+
+    .btn-analysis {
+      margin-bottom: 10px;
+    }
+
+    .import-row {
+      display: flex;
+    }
+
+    .import-row span {
+      margin-right: 20px;
+      width: 40px;
+    }
+
+    #txaInput {
+      flex: 1;
     }
 
     .content {
@@ -19,9 +37,18 @@
       margin-top: 20px;
     }
 
+    #totalInfo {
+      background-color: #00bfff4a;
+      border-radius: 12px;
+      color: #383838;
+      display: inline-block;
+      margin: 0;
+      padding: 2px 12px;
+    }
+
     #output {
       border: 1px solid gray;
-      min-height: 50px; 
+      min-height: 50px;
       padding: 20px;
     }
 
@@ -32,24 +59,52 @@
       white-space: pre;
     }
 
-    #output li::after {
-      display: inline-block;
-      content: "Size: "attr(data-size) " bytes,  Percentage: " attr(data-percentage) " %";
-      margin-left: 20px;
+    #output li.has-child {
+      cursor: pointer;
     }
 
+    #output li.has-child::before {
+      border: 1px solid grey;
+    }
+
+    #output li::before {
+      content: attr(data-expand-char);
+      display: inline-block;
+      font-size: 12px;
+      height: 14px;
+      line-height: 12px;
+      margin-left: -10px;
+      margin-right: 10px;
+      text-align: center;
+      width: 14px;
+    }
+
+    #output li::after {
+      background-color: #00bfff4a;
+      border-radius: 12px;
+      color: #383838;
+      display: inline-block;
+      content: "Size: "attr(data-size) " bytes,  Percentage: "attr(data-percentage) " %";
+      margin-left: 20px;
+      padding: 2px 12px;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="top">
-      <button onclick="importJSON(event)">run</button><br>
-      JSON: <textarea name="txaInput" id="txaInput" cols="30" rows="10"
-      >{"str1":"I am a string!","obj1":{"str2":456}}</textarea>
+      <p>Input some json and click 'Analysis' to check the size of it.</p>
+      <button class="btn-analysis" onclick="importJSON(event)">Analysis</button>
+      <div class="import-row">
+        <textarea name="txaInput" id="txaInput" cols="30"
+          rows="10">{"str1":"I am a string!","obj1":{"str2":456}}</textarea>
+
+      </div>
     </div>
     <div class="content">
-      <p id="totalInfo"></p>
       <p>Output JSON:</p>
+      <p id="totalInfo"></p>
       <ul id="output"></ul>
     </div>
   </div>
@@ -58,23 +113,27 @@
     function importJSON(event) {
       const txa = document.querySelector('#txaInput')
       const str = txa.value;
-      const json = JSON.parse(str);
-      const formattedJSONString = JSON.stringify(json, null, 4);
-      const foramttedArray = formattedJSONString.split('\n');
-      const sizeInfo = jsonSizeAnalysis(json);
-      const merged = mergeSizeInfoWithJson(sizeInfo, json)
-      const html = buildHTML(merged);
-      
-      const totalInfo = document.querySelector('#totalInfo');
-      const output = document.querySelector('#output');
-      totalInfo.innerHTML = `Size: ${sizeInfo.__size__} bytes`;
-      output.innerHTML = html.join('')
+      try {
+        const json = JSON.parse(str);
+        const formattedJSONString = JSON.stringify(json, null, 4);
+        const foramttedArray = formattedJSONString.split('\n');
+        const sizeInfo = jsonSizeAnalysis(json);
+        const merged = mergeSizeInfoWithJson(sizeInfo, json)
+        const html = buildHTML(merged);
+
+        const totalInfo = document.querySelector('#totalInfo');
+        const output = document.querySelector('#output');
+        totalInfo.innerHTML = `Total Size: ${sizeInfo.__size__} bytes`;
+        output.innerHTML = html.join('')
+      } catch (ex) {
+        alert('Not a valid JSON')
+      }
     }
 
     function mergeSizeInfoWithJson(sizeInfo, json, path = '', level = 0) {
       const result = [];
 
-      for(var key in json) {
+      for (var key in json) {
         const currentValue = json[key];
         const currentSize = sizeInfo[key];
         const isObject = typeof currentValue === 'object';
@@ -96,17 +155,19 @@
     }
 
     function buildHTML(jsonWithSizeInfo) {
-      if(!Array.isArray(jsonWithSizeInfo)) {
+      if (!Array.isArray(jsonWithSizeInfo)) {
         return ''
       }
 
       return jsonWithSizeInfo.map(node => {
         return `<li
-          class="nodes level-${node.level}" 
+          class="nodes level-${node.level} ${node.isObject ? 'has-child' : ''}" 
           style="display: var(${getVarName(node.path)}, ${getVarDefaultValue(node.path)})"
           data-key="${node.key}"
           data-path="${node.path}"
           data-size="${node.size}" 
+          data-has-child="${node.isObject}"
+          data-expand-char="${node.isObject ? '-' : ' '}"
           data-percentage="${node.percentage}">${'|- '.repeat(node.level)}${node.key}</li>`
       })
     }
@@ -125,21 +186,26 @@
         if (!ev.target.className.includes('nodes')) {
           return false
         }
-        
+
         const key = ev.target.dataset.key
         const path = ev.target.dataset.path
+        const hasChild = ev.target.dataset.hasChild === 'true'
         const varName = getVarName(path, key)
         const cssValue = root.style.getPropertyValue(varName)
-        const isHiddingChildren = cssValue === 'none'
-        isHiddingChildren
-          ? root.style.removeProperty(varName) 
-          : root.style.setProperty(varName, 'none')
+        const showingChild = cssValue !== 'none'
+        const nextCssValue = showingChild ? 'none' : 'block'
+        const nextExpandChar = hasChild
+          ? (showingChild ? '+' : '-')
+          : ' '
+        root.style.setProperty(varName, nextCssValue)
+        ev.target.dataset.expandChar = nextExpandChar
       })
     }
 
-    window.onload = function() {
+    window.onload = function () {
       registerEvent(document.body)
     }
   </script>
 </body>
+
 </html>
